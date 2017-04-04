@@ -6,16 +6,20 @@ from __future__ import print_function
 import time
 import urllib2
 import json
+import os
 
-SIGNIANT_STATUS_URL = 'https://1dmtgkjnl3y3.statuspage.io/api/v2/summary.json'
+SIGNIANT_STATUS_URL = os.environ['statusPageUrl']
+STATUS_PAGE_API_KEY = os.environ['statusPageApiKey']
 
 def get_signiant_status():
     '''
     :return: dictionary of services with their respective statuses
     '''
     signiant_services = {}
-    r = urllib2.urlopen(SIGNIANT_STATUS_URL, timeout=2)
-    response_status = r.status
+    request = urllib2.Request(SIGNIANT_STATUS_URL)
+    if STATUS_PAGE_API_KEY:
+        request.add_header("Authorization", "OAuth %s" % STATUS_PAGE_API_KEY)
+    r = urllib2.urlopen(request, timeout=2)
     if r.getcode() == 200:
         response = json.load(r)
         if 'components' in response:
