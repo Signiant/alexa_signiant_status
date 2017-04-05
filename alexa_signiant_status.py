@@ -8,8 +8,14 @@ import urllib2
 import json
 import os
 
-SIGNIANT_STATUS_URL = os.environ['statusPageUrl']
-STATUS_PAGE_API_KEY = os.environ['statusPageApiKey']
+# Default Signiant Status Page URL
+SIGNIANT_STATUS_URL = 'https://1dmtgkjnl3y3.statuspage.io/api/v2/summary.json'
+STATUS_PAGE_API_KEY = None
+
+if 'statusPageUrl' in os.environ:
+    SIGNIANT_STATUS_URL = os.environ['statusPageUrl']
+if 'statusPageApiKey' in os.environ:
+    STATUS_PAGE_API_KEY = os.environ['statusPageApiKey']
 
 def get_signiant_status():
     '''
