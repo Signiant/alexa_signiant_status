@@ -12,6 +12,12 @@ import os
 SIGNIANT_STATUS_URL = 'https://1dmtgkjnl3y3.statuspage.io/api/v2/summary.json'
 STATUS_PAGE_API_KEY = None
 
+# We need this to be set as an env var - fail if it's not
+if 'applicationId' in os.environ:    
+    APPLICATION_ID = os.environ['applicationId']
+else:
+    raise ValueError("No Application ID provided")
+
 if 'statusPageUrl' in os.environ:
     SIGNIANT_STATUS_URL = os.environ['statusPageUrl']
 if 'statusPageApiKey' in os.environ:
@@ -201,8 +207,7 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    if (event['session']['application']['applicationId'] !=
-            "amzn1.ask.skill.f9fc1eac-cc0a-494e-b496-48ede323f355"):
+    if (event['session']['application']['applicationId'] != APPLICATION_ID):
         raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
