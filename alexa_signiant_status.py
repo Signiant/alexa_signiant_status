@@ -109,10 +109,10 @@ def general_status():
 
     signiant_problems = []
     for service in signiant_stats:
-        if not 'operational' in service['status']:
-            signiant_problems.append((service, service['status']))
+        if not 'operational' in signiant_stats[service]['status']:
+            signiant_problems.append((service, signiant_stats[service]['status']))
 
-    signiant_status = "Signiant Platform Status " + pause()
+    signiant_status = ""
     if len(signiant_problems) > 0:
         # We've got a problem
         for service, status in signiant_problems:
@@ -120,8 +120,8 @@ def general_status():
     else:
         signiant_status += "All Systems Operational"
 
-    speech_output = "Signiant Status report for " + time.strftime("%d/%m/%Y") \
-                    + ' at ' + time.strftime("%I:%M %p") + pause()
+    speech_output = "Signiant Platform Status report for " + time.strftime("%d/%m/%Y") \
+                    + pause(10) + ' at ' + time.strftime("%I:%M %p U T C") + pause()
     speech_output += signiant_status + pause()
 
     return speech_output
@@ -202,7 +202,7 @@ def lambda_handler(event, context):
     function.
     """
     if (event['session']['application']['applicationId'] !=
-            "amzn1.ask.skill.0fbbeb0c-2363-44f1-96e4-3bc8ff270e95"):
+            "amzn1.ask.skill.f9fc1eac-cc0a-494e-b496-48ede323f355"):
         raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
