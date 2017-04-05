@@ -12,8 +12,16 @@ import os
 SIGNIANT_STATUS_URL = 'https://1dmtgkjnl3y3.statuspage.io/api/v2/summary.json'
 STATUS_PAGE_API_KEY = None
 
+# We need this to be set as an env var - fail if it's not
+if 'applicationId' in os.environ:    
+    APPLICATION_ID = os.environ['applicationId']
+else:
+    raise ValueError("No Application ID provided")
+    
+# Allow these to be overridden by the environment
 if 'statusPageUrl' in os.environ:
     SIGNIANT_STATUS_URL = os.environ['statusPageUrl']
+    
 if 'statusPageApiKey' in os.environ:
     STATUS_PAGE_API_KEY = os.environ['statusPageApiKey']
 
@@ -109,10 +117,10 @@ def general_status():
 
     signiant_problems = []
     for service in signiant_stats:
-        if not 'operational' in signiant_stats[service]['status']:
-            signiant_problems.append((service, signiant_stats[service]['status']))
+        if not 'operational' in service['status']:
+            signiant_problems.append((service, service['status']))
 
-    signiant_status = ""
+    signiant_status = "Signiant Platform Status " + pause()
     if len(signiant_problems) > 0:
         # We've got a problem
         for service, status in signiant_problems:
@@ -120,8 +128,8 @@ def general_status():
     else:
         signiant_status += "All Systems Operational"
 
-    speech_output = "Signiant Platform Status report for " + time.strftime("%d/%m/%Y") \
-                    + pause(10) + ' at ' + time.strftime("%I:%M %p U T C") + pause()
+    speech_output = "Signiant Status report for " + time.strftime("%d/%m/%Y") \
+                    + ' at ' + time.strftime("%I:%M %p") + pause()
     speech_output += signiant_status + pause()
 
     return speech_output
@@ -201,8 +209,7 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    if (event['session']['application']['applicationId'] !=
-            "amzn1.ask.skill.f9fc1eac-cc0a-494e-b496-48ede323f355"):
+    if (event['session']['application']['applicationId'] != APPLICATION_ID ):
         raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
