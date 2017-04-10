@@ -62,27 +62,28 @@ def handle_audio(url):
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text, card_output, card_image = None, should_end_session=False):
+def build_speechlet_response(title, output, reprompt_text,
+                             card_output, card_image_small=None, card_image_large=None,
+                             should_end_session=False):
 
     outputSpeech = {
         'type': 'SSML',
         'ssml': "<speak>" + output + "</speak>"
     }
 
-    card_type = 'Simple'
-    content_key = 'content'
-    if card_image:
-        card_type = 'Standard'
-        content_key = 'text'
-
-    card = {
-        'type': card_type,
-        'title': title,
-        content_key: card_output
-    }
-
-    if card_image:
-        card['image'] = {'smallImageUrl': card_image}
+    card = {}
+    card['title'] = title
+    if card_image_small or card_image_large:
+        card['type'] = 'Standard'
+        card['text'] = card_output
+        card['image'] = {}
+        if card_image_small:
+            card['image']['smallImageUrl'] = card_image_small
+        if card_image_large:
+            card['image']['largeImageUrl'] = card_image_large
+    else:
+        card['type'] = 'Simple'
+        card['content'] = card_output
 
     reprompt = {
         'outputSpeech': {
