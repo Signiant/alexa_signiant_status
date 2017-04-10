@@ -23,11 +23,12 @@ if 'statusPageUrl' in os.environ:
 if 'statusPageApiKey' in os.environ:
     STATUS_PAGE_API_KEY = os.environ['statusPageApiKey']
 
-def get_signiant_status():
+
+def get_raw_component_status():
     '''
-    :return: dictionary of services with their respective statuses
+    :return: list of services with their info
     '''
-    signiant_services = {}
+    sig_components = []
     request = urllib2.Request(SIGNIANT_STATUS_URL)
     if STATUS_PAGE_API_KEY:
         request.add_header("Authorization", "OAuth %s" % STATUS_PAGE_API_KEY)
@@ -35,9 +36,40 @@ def get_signiant_status():
     if r.getcode() == 200:
         response = json.load(r)
         if 'components' in response:
-            components = response['components']
-            for service in components:
-                signiant_services[service['name']] = {'status':service['status']}
+            sig_components = response['components']
+    return sig_components
+
+
+def get_signiant_status():
+    raw_status_list = get_raw_component_status()
+    # {
+    #     "status": "operational",
+    #     "name": "v1",
+    #     "created_at": "2016-10-21T14:20:42.069Z",
+    #     "updated_at": "2016-12-02T20:54:28.202Z",
+    #     "position": 1,
+    #     "description": "Backend services for TAPIv1",
+    #     "group_id": "1234567890",
+    #     "showcase": false,
+    #     "id": "2345678901",
+    #     "page_id": "123abc456def",
+    #     "group": false,
+    #     "only_show_if_degraded": false
+    # }
+    # Find the groups
+    groups = {}
+    for component in raw_status_list:
+        if component['group']:
+            groups[component['id']] = component['name']
+    # Now have a dictionary with {group_id: name, ...}
+    # Get statuses
+    signiant_services = {}
+    for service in raw_status_list:
+        if service['group_id']:
+            # This is part of a group - get the group's name
+            name = groups[service['group_id']] + ' ' + service['name']
+            status = service['status']
+            signiant_services[name] = {'status': status}
     return signiant_services
 
 
@@ -132,7 +164,6 @@ def handle_session_end_request():
 
 def general_status():
     signiant_stats = get_signiant_status()
-
     # Get the number of services
     no_signiant_services = len(signiant_stats)
 
