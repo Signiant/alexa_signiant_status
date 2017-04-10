@@ -41,6 +41,11 @@ def get_signiant_status():
     return signiant_services
 
 
+def convert_status_to_readable(status):
+    if 'degraded_performance' in status:
+        return "degraded performance"
+
+
 # ------------------------------ SSML Helpers  ---------------------------------
 
 def pause(duration=1000):
@@ -57,23 +62,39 @@ def handle_audio(url):
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text, should_end_session):
-    return {
+def build_speechlet_response(title, output, reprompt_text, card_output, card_image = None, should_end_session=False):
+
+    outputSpeech = {
+        'type': 'SSML',
+        'ssml': "<speak>" + output + "</speak>"
+    }
+
+    card_type = 'Simple'
+    content_key = 'content'
+    if card_image:
+        card_type = 'Standard'
+        content_key = 'text'
+
+    card = {
+        'type': card_type,
+        'title': title,
+        content_key: card_output
+    }
+
+    if card_image:
+        card['image'] = {'smallImageUrl': card_image}
+
+    reprompt = {
         'outputSpeech': {
             'type': 'SSML',
-            'ssml': "<speak>" + output + "</speak>"
-        },
-        'card': {
-            'type': 'Simple',
-            'title': "SessionSpeechlet - " + title,
-            'content': "SessionSpeechlet - " + output
-        },
-        'reprompt': {
-            'outputSpeech': {
-                'type': 'SSML',
-                'ssml': "<speak>" + reprompt_text + "</speak>"
-            }
-        },
+            'ssml': "<speak>" + reprompt_text + "</speak>"
+        }
+    }
+
+    return {
+        'outputSpeech': outputSpeech,
+        'card': card,
+        'reprompt': reprompt,
         'shouldEndSession': should_end_session
     }
 
@@ -97,50 +118,56 @@ def get_welcome_response():
     card_title = "Welcome"
     speech_output = general_status() + pause()
     reprompt_text = ""
-    should_end_session = True
     return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, reprompt_text, speech_output, should_end_session=True))
 
 
 def handle_session_end_request():
     card_title = "Session Ended"
     speech_output = "Thank you."
-    should_end_session = True
     return build_response({}, build_speechlet_response(
-        card_title, speech_output, None, should_end_session))
+        card_title, speech_output, None, speech_output, should_end_session=True))
 
 
 def general_status():
     signiant_stats = get_signiant_status()
+
+    # Get the number of services
+    no_signiant_services = len(signiant_stats)
 
     signiant_problems = []
     for service in signiant_stats:
         if not 'operational' in signiant_stats[service]['status']:
             signiant_problems.append((service, signiant_stats[service]['status']))
 
-    signiant_status = ""
+    today = time.strftime("%A %B %d %Y")
+
+    card_output = "Current Signiant Platform Status report for " + today + '\n'
+    for service in signiant_stats:
+        card_output += service + ': ' + signiant_stats[service]['status'] + '\n'
+
+    speech_output = "Current Signiant Platform Status report for " + today + pause()
     if len(signiant_problems) > 0:
         # We've got a problem
         for service, status in signiant_problems:
-            signiant_status += service + ' has a status of ' + status + pause()
+            speech_output += service + ' has a status of ' + convert_status_to_readable(status) + pause()
+        if len(signiant_problems) < no_signiant_services:
+            speech_output += "All other services are operating normally"
     else:
-        signiant_status += "All Systems Operational"
+        speech_output += "All services operating normally"
 
-    speech_output = "Signiant Platform Status report for " + time.strftime("%d/%m/%Y") \
-                    + pause(10) + ' at ' + time.strftime("%I:%M %p U T C") + pause()
-    speech_output += signiant_status + pause()
-
-    return speech_output
+    return speech_output, card_output
 
 
-def getBriefing(intent, session):
+def get_status(intent, session):
     session_attributes = {}
     reprompt_text = ""
-    speech_output = general_status()
-    should_end_session = True
+    card_title = "Signiant Platform Status"
+    speech_output = general_status()[0]
+    card_output = general_status()[1]
 
     return build_response(session_attributes, build_speechlet_response(
-        intent['name'], speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, reprompt_text, card_output, should_end_session=True))
 
 
 # --------------- Events ------------------
@@ -173,8 +200,8 @@ def on_intent(intent_request, session):
     intent_name = intent_request['intent']['name']
 
     # Dispatch to your skill's intent handlers
-    if intent_name == "GetBriefing":
-        return getBriefing(intent, session)
+    if intent_name == "GetStatus":
+        return get_status(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_help_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
