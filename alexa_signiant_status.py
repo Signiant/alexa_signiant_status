@@ -13,7 +13,7 @@ SIGNIANT_STATUS_URL = 'https://1dmtgkjnl3y3.statuspage.io/api/v2/summary.json'
 STATUS_PAGE_API_KEY = None
 
 # We need this to be set as an env var - fail if it's not
-if 'applicationId' in os.environ:    
+if 'applicationId' in os.environ:
     APPLICATION_ID = os.environ['applicationId']
 else:
     raise ValueError("No Application ID provided")
@@ -76,6 +76,10 @@ def get_signiant_status():
 def convert_status_to_readable(status):
     if 'degraded_performance' in status:
         return "degraded performance"
+    elif 'major_outage' in status:
+        return "major outage"
+    else:
+        return status
 
 
 # ------------------------------ SSML Helpers  ---------------------------------
@@ -148,11 +152,7 @@ def get_help_response():
 
 def get_welcome_response():
     session_attributes = {}
-    card_title = "Welcome"
-    speech_output = general_status() + pause()
-    reprompt_text = ""
-    return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, speech_output, should_end_session=True))
+    return get_status()
 
 
 def handle_session_end_request():
@@ -191,12 +191,11 @@ def general_status():
     return speech_output, card_output
 
 
-def get_status(intent, session):
+def get_status():
     session_attributes = {}
     reprompt_text = ""
     card_title = "Signiant Platform Status"
-    speech_output = general_status()[0]
-    card_output = general_status()[1]
+    speech_output, card_output = general_status()
 
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, card_output, should_end_session=True))
@@ -233,7 +232,8 @@ def on_intent(intent_request, session):
 
     # Dispatch to your skill's intent handlers
     if intent_name == "GetStatus":
-        return get_status(intent, session)
+        #return get_status(intent, session)
+        return get_status()
     elif intent_name == "AMAZON.HelpIntent":
         return get_help_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
