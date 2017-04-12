@@ -147,7 +147,12 @@ def build_response(session_attributes, speechlet_response):
 # --------------- Functions that control the skill's behavior ------------------
 
 def get_help_response():
-    return get_welcome_response()
+    card_title = "Signiant Help"
+    speech_output = "To request information about Signiant Platform Status, say status report" + pause() \
+                    + "What can I help you with?"
+    reprompt_text = "What can I help you with?"
+    return build_response({}, build_speechlet_response(
+        card_title, speech_output, reprompt_text, speech_output, should_end_session=False))
 
 
 def get_welcome_response():
@@ -173,8 +178,9 @@ def general_status():
             signiant_problems.append((service, signiant_stats[service]['status']))
 
     today = time.strftime("%A %B %d %Y")
+    now = time.strftime("%X UTC")
 
-    card_output = "Current Signiant Platform Status report for " + today + '\n'
+    card_output = "Current Signiant Platform Status report for " + today + ' at ' + now + '\n'
     for service in signiant_stats:
         card_output += service + ': ' + signiant_stats[service]['status'] + '\n'
 
@@ -185,6 +191,7 @@ def general_status():
             speech_output += service + ' has a status of ' + convert_status_to_readable(status) + pause()
         if len(signiant_problems) < no_signiant_services:
             speech_output += "All other services are operating normally"
+
     else:
         speech_output += "All services operating normally"
 
@@ -204,15 +211,17 @@ def get_status():
 # --------------- Events ------------------
 
 def on_session_started(session_started_request, session):
-    """ Called when the session starts """
+    """
+    Called when the session starts
+    """
 
     print("on_session_started requestId=" + session_started_request['requestId']
           + ", sessionId=" + session['sessionId'])
 
 
 def on_launch(launch_request, session):
-    """ Called when the user launches the skill without specifying what they
-    want
+    """
+    Called when the user launches the skill without specifying what they want
     """
 
     print("on_launch requestId=" + launch_request['requestId'] +
@@ -222,7 +231,9 @@ def on_launch(launch_request, session):
 
 
 def on_intent(intent_request, session):
-    """ Called when the user specifies an intent for this skill """
+    """
+    Called when the user specifies an intent for this skill
+    """
 
     print("on_intent requestId=" + intent_request['requestId'] +
           ", sessionId=" + session['sessionId'])
@@ -243,29 +254,24 @@ def on_intent(intent_request, session):
 
 
 def on_session_ended(session_ended_request, session):
-    """ Called when the user ends the session.
-
+    """
+    Called when the user ends the session.
     Is not called when the skill returns should_end_session=true
     """
     print("on_session_ended requestId=" + session_ended_request['requestId'] +
           ", sessionId=" + session['sessionId'])
-    # add cleanup logic here
 
 
 # --------------- Main handler ------------------
 
 def lambda_handler(event, context):
-    """ Route the incoming request based on type (LaunchRequest, IntentRequest,
+    """
+    Route the incoming request based on type (LaunchRequest, IntentRequest,
     etc.) The JSON body of the request is provided in the event parameter.
     """
     print("event.session.application.applicationId=" +
           event['session']['application']['applicationId'])
 
-    """
-    Uncomment this if statement and populate with your skill's application ID to
-    prevent someone else from configuring a skill that sends requests to this
-    function.
-    """
     if (event['session']['application']['applicationId'] != APPLICATION_ID):
         raise ValueError("Invalid Application ID")
 
