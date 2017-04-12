@@ -61,7 +61,6 @@ def get_signiant_status():
     for component in raw_status_list:
         if component['group']:
             groups[component['id']] = component['name']
-    # Now have a dictionary with {group_id: name, ...}
     # Get statuses
     signiant_services = {}
     for service in raw_status_list:
@@ -78,6 +77,10 @@ def convert_status_to_readable(status):
         return "degraded performance"
     elif 'major_outage' in status:
         return "major outage"
+    elif 'partial_outage' in status:
+        return "partial outage"
+    elif 'under_maintenance' in status:
+        return "under maintenance"
     else:
         return status
 
@@ -98,8 +101,8 @@ def handle_audio(url):
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text,
-                             card_output, card_image_small=None, card_image_large=None,
+def build_speechlet_response(title, output, card_output, reprompt_text="",
+                             card_image_small=None, card_image_large=None,
                              should_end_session=False):
 
     outputSpeech = {
@@ -152,7 +155,7 @@ def get_help_response():
                     + "What can I help you with?"
     reprompt_text = "What can I help you with?"
     return build_response({}, build_speechlet_response(
-        card_title, speech_output, reprompt_text, speech_output, should_end_session=False))
+        card_title, speech_output, speech_output, reprompt_text, should_end_session=False))
 
 
 def get_welcome_response():
@@ -164,7 +167,7 @@ def handle_session_end_request():
     card_title = "Session Ended"
     speech_output = "Thank you."
     return build_response({}, build_speechlet_response(
-        card_title, speech_output, None, speech_output, should_end_session=True))
+        card_title, speech_output, speech_output, should_end_session=True))
 
 
 def general_status():
@@ -183,6 +186,7 @@ def general_status():
     card_output = "Current Signiant Platform Status report for " + today + ' at ' + now + '\n'
     for service in signiant_stats:
         card_output += service + ': ' + signiant_stats[service]['status'] + '\n'
+    card_output += "For more information, please visit status.signiant.com"
 
     speech_output = "Current Signiant Platform Status report for " + today + pause()
     if len(signiant_problems) > 0:
@@ -190,8 +194,8 @@ def general_status():
         for service, status in signiant_problems:
             speech_output += service + ' has a status of ' + convert_status_to_readable(status) + pause()
         if len(signiant_problems) < no_signiant_services:
-            speech_output += "All other services are operating normally"
-
+            speech_output += "All other services are operating normally" + pause()
+        speech_output += "For more information, please visit status.signiant.com"
     else:
         speech_output += "All services operating normally"
 
@@ -200,12 +204,11 @@ def general_status():
 
 def get_status():
     session_attributes = {}
-    reprompt_text = ""
     card_title = "Signiant Platform Status"
     speech_output, card_output = general_status()
 
     return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, card_output, should_end_session=True))
+        card_title, speech_output, card_output, should_end_session=True))
 
 
 # --------------- Events ------------------
