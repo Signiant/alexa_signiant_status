@@ -224,7 +224,7 @@ def get_media_shuttle():
 def get_flight():
     session_attributes = {}
     card_title = "Signiant Flight"
-    speech_output = 'Flight is an auto scaling SaaS utility that accelerates the transfer of large dayta sets <break strength="weak"/> into and out of cloud object storage'
+    speech_output = 'Flight is an auto scaling SaaS utility that accelerates the transfer of large files in and out of cloud object storage'
     card_output = "Flight is an auto scaling SaaS utility that accelerates the transfer of large data sets into and out of cloud object storage."
 
     return build_response(session_attributes, build_speechlet_response(
