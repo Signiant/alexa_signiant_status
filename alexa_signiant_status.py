@@ -211,6 +211,36 @@ def get_status():
         card_title, speech_output, card_output, should_end_session=True))
 
 
+def get_media_shuttle():
+    session_attributes = {}
+    card_title = "Signiant Media Shuttle"
+    speech_output = "Media Shuttle is a SaaS solution that allows anyone to quickly and securely transfer any size file anywhere in the world"
+    card_output = "Media Shuttle is a SaaS solution that allows anyone to quickly and securely transfer any size file anywhere in the world."
+
+    return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, card_output, should_end_session=True))
+
+
+def get_flight():
+    session_attributes = {}
+    card_title = "Signiant Flight"
+    speech_output = 'Flight is an auto scaling SaaS utility that accelerates the transfer of large dayta sets <break strength="weak"/> into and out of cloud object storage'
+    card_output = "Flight is an auto scaling SaaS utility that accelerates the transfer of large data sets into and out of cloud object storage."
+
+    return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, card_output, should_end_session=True))
+
+
+def get_managers_and_agents():
+    session_attributes = {}
+    card_title = "Signiant Managers+Agents"
+    speech_output = "Managers and Agents software enables the automated delivery of large files across geographically dispersed locations"
+    card_output = "Managers+Agents software enables the automated delivery of large files across geographically dispersed locations."
+
+    return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, card_output, should_end_session=True))
+
+
 # --------------- Events ------------------
 
 def on_session_started(session_started_request, session):
@@ -246,8 +276,13 @@ def on_intent(intent_request, session):
 
     # Dispatch to your skill's intent handlers
     if intent_name == "GetStatus":
-        #return get_status(intent, session)
         return get_status()
+    elif intent_name == "GetMediaShuttle":
+        return get_media_shuttle()
+    elif intent_name == "GetFlight":
+        return get_flight()
+    elif intent_name == "GetManagersAndAgents":
+        return get_managers_and_agents()
     elif intent_name == "AMAZON.HelpIntent":
         return get_help_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
