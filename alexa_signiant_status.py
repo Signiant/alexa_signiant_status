@@ -2,9 +2,8 @@
 Return Signiant Platform Status
 """
 
-from __future__ import print_function
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import os
 
@@ -29,10 +28,10 @@ def get_raw_component_status():
     :return: list of services with their info
     '''
     sig_components = []
-    request = urllib2.Request(SIGNIANT_STATUS_URL)
+    request = urllib.request.Request(SIGNIANT_STATUS_URL)
     if STATUS_PAGE_API_KEY:
         request.add_header("Authorization", "OAuth %s" % STATUS_PAGE_API_KEY)
-    r = urllib2.urlopen(request, timeout=2)
+    r = urllib.request.urlopen(request, timeout=2)
     if r.getcode() == 200:
         response = json.load(r)
         if 'components' in response:
